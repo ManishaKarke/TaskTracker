@@ -60,5 +60,23 @@ namespace TaskTracker.DataAccess.Repository.Implementation
         {
             _context.Projects.Update(project);
         }
+
+   
+        public async Task<Project?> GetByIdForUpdateAsync(int id,CancellationToken cancellationToken)
+        {
+            return await _context.Projects.FirstOrDefaultAsync(project => project.Id == id,cancellationToken);
+        }
+
+        public void UpdateWithConcurrency(Project project, byte[] originalRowVersion)
+        {
+            var entry = _context.Entry(project);
+
+            entry.State = EntityState.Modified;
+
+            entry.Property(p => p.RowVersion).OriginalValue =
+                originalRowVersion;
+
+            entry.Property(p => p.RowVersion).IsModified = false;
+        }
     }
 }

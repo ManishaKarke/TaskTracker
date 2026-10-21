@@ -13,12 +13,11 @@ namespace TaskTracker.DataAccess.Repository.Interfaces
     {
         Task<(List<TaskItem> Items, int TotalCount)> GetPagedAsync(int projectId, TaskStatus? status, TaskPriority? priority, string? search, string sortBy, string sortDir, int page, int pageSize, CancellationToken cancellationToken);
         Task<TaskItem?> GetByIdAsync(int id, CancellationToken cancellationToken);
-
+        Task AddAsync(TaskItem taskItem, CancellationToken cancellationToken);
         void Update(TaskItem taskItem);
         void Delete(TaskItem taskItem);
-
         Task<int> SaveChangesAsync(CancellationToken cancellationToken);
-
-
+        Task<TaskItem?> GetByIdForUpdateAsync(int id,CancellationToken cancellationToken);
+        void UpdateWithConcurrency(TaskItem taskItem,byte[] originalRowVersion);
     }
 }

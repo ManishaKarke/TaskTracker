@@ -3,6 +3,8 @@ using Microsoft.Extensions.Configuration;
 using TaskTracker.DataAccess.Context;
 using TaskTracker.DataAccess.Repository.Implementation;
 using TaskTracker.DataAccess.Repository.Interfaces;
+using TaskTracker.Services.Implementations;
+using TaskTracker.Services.Interfaces;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -15,6 +17,9 @@ builder.Services.AddDbContext<ApplicationDbContext>(options => options.UseSqlSer
 
 builder.Services.AddScoped<IProjectRepository,ProjectRepository>();
 builder.Services.AddScoped<ITaskRepository,TaskRepository>();
+
+builder.Services.AddScoped<IProjectServices, ProjectService>();
+builder.Services.AddScoped<ITaskService, TaskService>();
 
 
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle

@@ -20,5 +20,9 @@ namespace TaskTracker.DataAccess.Repository.Interfaces
         void Delete(Project project);
         Task<int> SaveChnagesAsync(CancellationToken cancellation);
 
+        Task<Project?> GetByIdForUpdateAsync(int id, CancellationToken cancellationToken);
+        void UpdateWithConcurrency(Project project, byte[] originalRowVersion);
+
+
     }
 }

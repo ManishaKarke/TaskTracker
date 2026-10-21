@@ -83,11 +83,32 @@ namespace TaskTracker.DataAccess.Repository.Implementation
         {
             return await _context.SaveChangesAsync(cancellationToken);
         }
+        public async Task AddAsync(TaskItem taskItem, CancellationToken cancellationToken)
+        {
+            await _context.TaskItems.AddAsync(taskItem,  cancellationToken);
+        }
 
         public void Update(TaskItem taskItem)
         {
             _context.TaskItems.Update(taskItem);
         }
+
+        public async Task<TaskItem?> GetByIdForUpdateAsync(int id,CancellationToken cancellationToken)
+        {
+            return await _context.TaskItems.FirstOrDefaultAsync(task => task.Id == id,cancellationToken);
+        }
+
+        public void UpdateWithConcurrency(TaskItem taskItem,byte[] originalRowVersion)
+        {
+            var entry = _context.Entry(taskItem);
+
+            entry.State = EntityState.Modified;
+
+            entry.Property(task => task.RowVersion).OriginalValue = originalRowVersion;
+
+            entry.Property(task => task.RowVersion).IsModified = false;
+        }
+
     }
 
 
