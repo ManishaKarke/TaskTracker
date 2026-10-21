@@ -1,0 +1,15 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\TaskTracker.DataAccess\TaskTracker.DataAccess.csproj" />
+    <ProjectReference Include="..\TaskTracker.DTO\TaskTracker.DTO.csproj" />
+    <ProjectReference Include="..\TaskTracker.Model\TaskTracker.Model.csproj" />
+  </ItemGroup>
+
+</Project>
