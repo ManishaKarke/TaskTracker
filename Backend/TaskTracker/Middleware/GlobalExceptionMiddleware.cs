@@ -14,7 +14,7 @@ namespace TaskTracker.Middleware
             _logger = logger;
         }
 
-        public async Task InvokedAsync(HttpContext context)
+        public async Task InvokeAsync(HttpContext context)
         {
             try
             {
