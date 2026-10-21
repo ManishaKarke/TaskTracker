@@ -1,0 +1,110 @@
+.page {
+    max-width: 1200px;
+    margin: 24px auto;
+    padding: 0 16px;
+  }
+  
+  .page-header,
+  .filters,
+  .actions,
+  .pagination {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  
+  .page-header,
+  .pagination {
+    justify-content: space-between;
+  }
+  
+  .filters {
+    margin: 20px 0;
+    flex-wrap: wrap;
+  }
+  
+  .filters input {
+    flex: 2 1 200px;
+  }
+  
+  .filters select {
+    flex: 1 1 130px;
+  }
+  
+  .form-panel {
+    margin: 20px 0;
+    padding: 16px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+  }
+  
+  .form-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+  }
+  
+  label {
+    display: block;
+    margin-top: 12px;
+  }
+  
+  input,
+  textarea,
+  select {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 8px;
+    margin-top: 5px;
+  }
+  
+  button {
+    padding: 8px 12px;
+    cursor: pointer;
+  }
+  
+  button:disabled {
+    cursor: not-allowed;
+    opacity: 0.6;
+  }
+  
+  table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  
+  th,
+  td {
+    padding: 10px;
+    border-bottom: 1px solid #ddd;
+    text-align: left;
+  }
+  
+  .table-wrapper {
+    overflow-x: auto;
+  }
+  
+  .actions {
+    flex-wrap: wrap;
+  }
+  
+  .pagination {
+    margin-top: 16px;
+    flex-wrap: wrap;
+  }
+  
+  .secondary {
+    background: #eee;
+    border: 1px solid #ccc;
+  }
+  
+  .danger,
+  .error {
+    color: #b42318;
+  }
+  
+  @media (max-width: 600px) {
+    .form-grid {
+      grid-template-columns: 1fr;
+    }
+  }

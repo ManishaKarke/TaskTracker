@@ -13,6 +13,7 @@ export enum TaskPriority{
 export interface TaskItem{
     id: number;
     projectId: number;
+    title: string;
     description:string|null;
     status:TaskStatus;
     priority:TaskPriority;
@@ -21,6 +22,16 @@ export interface TaskItem{
     createdAt:string;
     rowVersion:string;
 }
+
+export interface TaskRequest {
+    title: string;
+    description: string | null;
+    status: TaskStatus;
+    priority: TaskPriority;
+    assignedTo: string | null;
+    dueDate: string | null;
+    rowVersion?: string;
+  }
 
 export interface TaskQuery{
     status?: TaskStatus;

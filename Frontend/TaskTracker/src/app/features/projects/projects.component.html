@@ -1,1 +1,78 @@
-<p>projects works!</p>
+<section class="page">
+    <div class="page-header">
+      <h2>Projects</h2>
+      <button type="button" (click)="openCreateForm()">New Project</button>
+    </div>
+  
+    <form
+      *ngIf="formVisible"
+      [formGroup]="projectForm"
+      (ngSubmit)="saveProject()"
+      class="form-panel"
+    >
+      <h3>{{ editingProject ? 'Edit Project' : 'Create Project' }}</h3>
+  
+      <label for="name">Project Name</label>
+      <input id="name" type="text" formControlName="name" />
+  
+      <small class="error" *ngIf="nameControl.touched && nameControl.hasError('required')">
+        Project name is required.
+      </small>
+      <small class="error" *ngIf="nameControl.touched && nameControl.hasError('maxlength')">
+        Maximum 100 characters.
+      </small>
+  
+      <label for="description">Description</label>
+      <textarea id="description" formControlName="description" rows="3"></textarea>
+  
+      <small class="error"
+        *ngIf="descriptionControl.touched && descriptionControl.hasError('maxlength')">
+        Maximum 500 characters.
+      </small>
+  
+      <div class="actions">
+        <button type="submit" [disabled]="saving">
+          {{ saving ? 'Saving...' : 'Save' }}
+        </button>
+        <button type="button" class="secondary" (click)="formVisible = false">
+          Cancel
+        </button>
+      </div>
+    </form>
+  
+    <p *ngIf="loading">Loading projects...</p>
+  
+    <p *ngIf="!loading && projects.length === 0">No projects found. Create one to get started.</p>
+  
+    <div class="table-wrapper" *ngIf="!loading && projects.length > 0">
+      <table>
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Description</th>
+            <th>Tasks</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let project of projects">
+            <td>
+              <button type="button" class="link-button" (click)="openTasks(project)">
+                {{ project.name }}
+              </button>
+            </td>
+            <td>{{ project.description || '—' }}</td>
+            <td>{{ project.taskCount }}</td>
+            <td class="actions">
+              <button type="button" class="secondary" (click)="openEditForm(project)">
+                Edit
+              </button>
+              <button type="button" class="danger" (click)="deleteProject(project)">
+                Delete
+              </button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
