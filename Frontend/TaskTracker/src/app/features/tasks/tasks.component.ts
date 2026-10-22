@@ -1,17 +1,36 @@
+
 import { Component, DestroyRef, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormBuilder, FormControl, ReactiveFormsModule, Validators } from '@angular/forms';
-import { ActivatedRoute } from '@angular/router';
 import {
-  BehaviorSubject, EMPTY, catchError, combineLatest, debounceTime,
-  distinctUntilChanged, finalize, startWith, switchMap
+  FormBuilder,
+  FormControl,
+  FormsModule,
+  ReactiveFormsModule,
+  Validators
+} from '@angular/forms';
+import { ActivatedRoute, Router } from '@angular/router';
+import {
+  BehaviorSubject,
+  EMPTY,
+  catchError,
+  combineLatest,
+  debounceTime,
+  distinctUntilChanged,
+  finalize,
+  startWith,
+  switchMap,
+  tap
 } from 'rxjs';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 import { TaskService } from '../../core/services/task.service';
 import { ProjectService } from '../../core/services/project.service';
 import {
-  TaskItem, TaskPriority, TaskQuery, TaskRequest, TaskStatus,
+  TaskItem,
+  TaskPriority,
+  TaskQuery,
+  TaskRequest,
+  TaskStatus,
   PagedResponse
 } from '../../models/task.model';
 import { Project } from '../../models/project.model';
@@ -19,7 +38,7 @@ import { Project } from '../../models/project.model';
 @Component({
   selector: 'app-tasks',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, FormsModule, ReactiveFormsModule],
   templateUrl: './tasks.component.html',
   styleUrl: './tasks.component.css'
 })
@@ -29,17 +48,20 @@ export class TasksComponent implements OnInit {
   private readonly taskService = inject(TaskService);
   private readonly projectService = inject(ProjectService);
   private readonly destroyRef = inject(DestroyRef);
-
+  private readonly router = inject(Router);
   projectId = 0;
   project: Project | null = null;
   tasks: TaskItem[] = [];
+
   loading = false;
   saving = false;
   formVisible = false;
   editingTask: TaskItem | null = null;
+
   page = 1;
   pageSize = 10;
   totalCount = 0;
+
   sortBy: TaskQuery['sortBy'] = 'createdAt';
   sortDir: 'asc' | 'desc' = 'desc';
 
@@ -55,13 +77,13 @@ export class TasksComponent implements OnInit {
     { value: TaskPriority.High, label: 'High' }
   ];
 
-  searchControl = new FormControl('', { nonNullable: true });
-  statusFilter = new FormControl('');
-  priorityFilter = new FormControl('');
+  readonly searchControl = new FormControl('', { nonNullable: true });
+  readonly statusFilter = new FormControl('');
+  readonly priorityFilter = new FormControl('');
 
   private readonly refresh$ = new BehaviorSubject<void>(undefined);
 
-  taskForm = this.fb.group({
+  readonly taskForm = this.fb.group({
     title: ['', [Validators.required, Validators.maxLength(200)]],
     description: ['', Validators.maxLength(1000)],
     status: [TaskStatus.Todo, Validators.required],
@@ -81,29 +103,56 @@ export class TasksComponent implements OnInit {
     this.projectService.getById(this.projectId)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
-        next: project => this.project = project
+        next: project => {
+          this.project = project;
+        },
+        error: error => {
+          console.error('Failed to load project:', error);
+          window.alert('Unable to load project details.');
+        }
       });
 
     const search$ = this.searchControl.valueChanges.pipe(
       startWith(this.searchControl.value),
       debounceTime(300),
-      distinctUntilChanged()
+      distinctUntilChanged(),
+      tap(() => {
+        this.page = 1;
+      })
     );
 
     const filters$ = combineLatest([
-      this.statusFilter.valueChanges.pipe(startWith(this.statusFilter.value)),
-      this.priorityFilter.valueChanges.pipe(startWith(this.priorityFilter.value))
-    ]);
+      this.statusFilter.valueChanges.pipe(
+        startWith(this.statusFilter.value)
+      ),
+      this.priorityFilter.valueChanges.pipe(
+        startWith(this.priorityFilter.value)
+      )
+    ]).pipe(
+      distinctUntilChanged(
+        (previous, current) =>
+          previous[0] === current[0] &&
+          previous[1] === current[1]
+      ),
+      tap(() => {
+        this.page = 1;
+      })
+    );
 
     combineLatest([search$, filters$, this.refresh$]).pipe(
       switchMap(([search, filters]) => {
         this.loading = true;
 
         const [statusValue, priorityValue] = filters;
+
         const query: TaskQuery = {
-          search,
-          status: statusValue === '' ? undefined : Number(statusValue) as TaskStatus,
-          priority: priorityValue === '' ? undefined : Number(priorityValue) as TaskPriority,
+          search: search.trim(),
+          status: statusValue === ''
+            ? undefined
+            : Number(statusValue) as TaskStatus,
+          priority: priorityValue === ''
+            ? undefined
+            : Number(priorityValue) as TaskPriority,
           sortBy: this.sortBy,
           sortDir: this.sortDir,
           page: this.page,
@@ -111,21 +160,47 @@ export class TasksComponent implements OnInit {
         };
 
         return this.taskService.getByProject(this.projectId, query).pipe(
-          catchError(() => EMPTY),
-          finalize(() => this.loading = false)
+          catchError(error => {
+            console.error('Failed to load tasks:', error);
+            this.tasks = [];
+            this.totalCount = 0;
+
+            window.alert(
+              'Unable to load tasks. Check the API and try again.'
+            );
+
+            return EMPTY;
+          }),
+          finalize(() => {
+            this.loading = false;
+          })
         );
       }),
       takeUntilDestroyed(this.destroyRef)
-    ).subscribe(result => {
-      this.tasks = result.item;
-      this.page = result.page;
-      this.pageSize = result.pageSize;
-      this.totalCount = result.totalCount;
+    ).subscribe((result: PagedResponse<TaskItem>) => {
+      this.tasks = Array.isArray(result.items) ? result.items : [];
+      this.page = result.page ?? 1;
+      this.pageSize = result.pageSize ?? 10;
+      this.totalCount = result.totalCount ?? this.tasks.length;
+
+      console.log('Tasks loaded:', this.tasks.length);
+      console.log('Total matching tasks:', this.totalCount);
     });
+  }
+
+  getStatusLabel(status: number): string {
+    return this.statuses.find(item => item.value === status)?.label
+      ?? 'Unknown Status';
+  }
+
+  getPriorityLabel(priority: number): string {
+    return this.priorities.find(item => item.value === priority)?.label
+      ?? 'Unknown Priority';
   }
 
   openCreateForm(): void {
     this.editingTask = null;
+
     this.taskForm.reset({
       title: '',
       description: '',
@@ -134,11 +209,13 @@ export class TasksComponent implements OnInit {
       assignedTo: '',
       dueDate: ''
     });
+
     this.formVisible = true;
   }
 
   openEditForm(task: TaskItem): void {
     this.editingTask = task;
+
     this.taskForm.reset({
       title: task.title,
       description: task.description ?? '',
@@ -147,6 +224,7 @@ export class TasksComponent implements OnInit {
       assignedTo: task.assignedTo ?? '',
       dueDate: task.dueDate ? task.dueDate.substring(0, 10) : ''
     });
+
     this.formVisible = true;
   }
 
@@ -157,6 +235,7 @@ export class TasksComponent implements OnInit {
     }
 
     const value = this.taskForm.getRawValue();
+
     const request: TaskRequest = {
       title: value.title!.trim(),
       description: value.description?.trim() || null,
@@ -167,7 +246,7 @@ export class TasksComponent implements OnInit {
     };
 
     if (this.editingTask) {
-      request.rowVersion = this.editingTask.rowVersion;
+      request.rowVersion = this.editingTask.rowversion;
     }
 
     this.saving = true;
@@ -177,12 +256,20 @@ export class TasksComponent implements OnInit {
       : this.taskService.create(this.projectId, request);
 
     operation.pipe(
-      finalize(() => this.saving = false),
+      finalize(() => {
+        this.saving = false;
+      }),
       takeUntilDestroyed(this.destroyRef)
     ).subscribe({
       next: () => {
         this.formVisible = false;
         this.refresh$.next();
+      },
+      error: error => {
+        console.error('Failed to save task:', error);
+        window.alert(
+          'Unable to save the task. Please check the entered data.'
+        );
       }
     });
   }
@@ -191,11 +278,19 @@ export class TasksComponent implements OnInit {
     const select = event.target as HTMLSelectElement;
     const status = Number(select.value) as TaskStatus;
 
-    this.taskService.updateStatus(task.id, status, task.rowVersion)
+    this.taskService.updateStatus(task.id, status, task.rowversion)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
-        next: () => this.refresh$.next(),
-        error: () => this.refresh$.next()
+        next: () => {
+          this.refresh$.next();
+        },
+        error: error => {
+          console.error('Failed to update task status:', error);
+          window.alert(
+            'Unable to update status. The task list will be refreshed.'
+          );
+          this.refresh$.next();
+        }
       });
   }
 
@@ -211,7 +306,12 @@ export class TasksComponent implements OnInit {
           if (this.tasks.length === 1 && this.page > 1) {
             this.page--;
           }
+
           this.refresh$.next();
+        },
+        error: error => {
+          console.error('Failed to delete task:', error);
+          window.alert('Unable to delete the task. Please try again.');
         }
       });
   }
@@ -229,12 +329,45 @@ export class TasksComponent implements OnInit {
   }
 
   changePage(newPage: number): void {
-    const totalPages = Math.max(1, Math.ceil(this.totalCount / this.pageSize));
-
-    if (newPage >= 1 && newPage <= totalPages) {
+    if (newPage >= 1 && newPage <= this.totalPages) {
       this.page = newPage;
       this.refresh$.next();
     }
+  }
+
+  readonly minDueDate = this.getTodayDate();
+
+private getTodayDate(): string {
+  const today = new Date();
+
+  // Use the user's local date rather than UTC.
+  const year = today.getFullYear();
+  const month = String(today.getMonth() + 1).padStart(2, '0');
+  const day = String(today.getDate()).padStart(2, '0');
+
+  return `${year}-${month}-${day}`;
+}
+
+  changeStatusValue(task: TaskItem, value: number): void {
+    const status = Number(value) as TaskStatus;
+  
+    this.taskService
+      .updateStatus(task.id, status, task.rowversion)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: () => {
+          this.refresh$.next();
+        },
+        error: error => {
+          console.error('Failed to update task status:', error);
+          window.alert('Unable to update task status.');
+          this.refresh$.next();
+        }
+      });
+  }
+
+  goToProjects(): void {
+    this.router.navigate(['/projects']);
   }
 
   get totalPages(): number {

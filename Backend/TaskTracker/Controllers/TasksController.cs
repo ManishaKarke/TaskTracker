@@ -23,7 +23,7 @@ namespace TaskTracker.Controllers
         /// Retrieves tasks for a projects with filtering, sorting and paging
         /// </summary>
         /// GET: /api/projects/{projectId}/tasks
-        [HttpGet]
+        [HttpGet("projects/{projectId:int}/tasks")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]

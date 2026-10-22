@@ -1,191 +1,240 @@
+<button
+  type="button"
+  class="btn btn-outline-secondary mb-3"
+  (click)="goToProjects()"
+>
+  &larr; Back to Projects
+</button>
 <section class="page">
-    <div class="page-header">
-      <div>
-        <h2>Tasks</h2>
-        <p *ngIf="project">Project: {{ project.name }}</p>
-      </div>
-      <button type="button" (click)="openCreateForm()">New Task</button>
+  <div class="page-header">
+    <div>
+      <h2>Tasks</h2>
+      <p *ngIf="project">Project: {{ project.name }}</p>
     </div>
-  
-    <form
-      *ngIf="formVisible"
-      [formGroup]="taskForm"
-      (ngSubmit)="saveTask()"
-      class="form-panel"
+    <button type="button" (click)="openCreateForm()">New Task</button>
+  </div>
+
+  <form
+    *ngIf="formVisible"
+    [formGroup]="taskForm"
+    (ngSubmit)="saveTask()"
+    class="form-panel"
+  >
+    <h3>{{ editingTask ? 'Edit Task' : 'Create Task' }}</h3>
+
+    <label for="title">Title *</label>
+    <input id="title" formControlName="title" />
+
+    <small
+      class="error"
+      *ngIf="titleControl.touched && titleControl.hasError('required')"
     >
-      <h3>{{ editingTask ? 'Edit Task' : 'Create Task' }}</h3>
-  
-      <label for="title">Title *</label>
-      <input id="title" formControlName="title" />
-      <small class="error"
-        *ngIf="titleControl.touched && titleControl.hasError('required')">
-        Title is required.
-      </small>
-      <small class="error"
-        *ngIf="titleControl.touched && titleControl.hasError('maxlength')">
-        Maximum 200 characters.
-      </small>
-  
-      <label for="description">Description</label>
-      <textarea id="description" rows="2" formControlName="description"></textarea>
-  
-      <div class="form-grid">
-        <div>
-          <label for="status">Status</label>
-          <select id="status" formControlName="status">
-            <option *ngFor="let item of statuses" [ngValue]="item.value">
-              {{ item.label }}
-            </option>
-          </select>
-        </div>
-  
-        <div>
-          <label for="priority">Priority</label>
-          <select id="priority" formControlName="priority">
-            <option *ngFor="let item of priorities" [ngValue]="item.value">
-              {{ item.label }}
-            </option>
-          </select>
-        </div>
-  
-        <div>
-          <label for="assignedTo">Assignee</label>
-          <input id="assignedTo" formControlName="assignedTo" />
-        </div>
-  
-        <div>
-          <label for="dueDate">Due Date</label>
-          <input id="dueDate" type="date" formControlName="dueDate" />
-        </div>
+      Title is required.
+    </small>
+
+    <small
+      class="error"
+      *ngIf="titleControl.touched && titleControl.hasError('maxlength')"
+    >
+      Maximum 200 characters.
+    </small>
+
+    <label for="description">Description</label>
+    <textarea
+      id="description"
+      rows="2"
+      formControlName="description"
+    ></textarea>
+
+    <div class="form-grid">
+      <div>
+        <label for="status">Status</label>
+        <select id="status" formControlName="status">
+          <option *ngFor="let item of statuses" [ngValue]="item.value">
+            {{ item.label }}
+          </option>
+        </select>
       </div>
-  
-      <div class="actions">
-        <button type="submit" [disabled]="saving">
-          {{ saving ? 'Saving...' : 'Save Task' }}
-        </button>
-        <button type="button" class="secondary" (click)="formVisible = false">
-          Cancel
-        </button>
+
+      <div>
+        <label for="priority">Priority</label>
+        <select id="priority" formControlName="priority">
+          <option *ngFor="let item of priorities" [ngValue]="item.value">
+            {{ item.label }}
+          </option>
+        </select>
       </div>
-    </form>
-  
-    <div class="filters">
-      <input
-        type="search"
-        placeholder="Search task title..."
-        [formControl]="searchControl"
-      />
-  
-      <select aria-label="Filter by status" [formControl]="statusFilter">
-        <option value="">All statuses</option>
-        <option *ngFor="let item of statuses" [value]="item.value">
-          {{ item.label }}
-        </option>
-      </select>
-  
-      <select aria-label="Filter by priority" [formControl]="priorityFilter">
-        <option value="">All priorities</option>
-        <option *ngFor="let item of priorities" [value]="item.value">
-          {{ item.label }}
-        </option>
-      </select>
-  
-      <select
-        aria-label="Sort tasks"
-        [value]="sortBy"
-        (change)="changeSort($any($event.target).value)"
+
+      <div>
+        <label for="assignedTo">Assignee</label>
+        <input id="assignedTo" formControlName="assignedTo" />
+      </div>
+
+      <div>
+        <label for="dueDate">Due Date</label>
+        
+<label for="dueDate">Due Date</label>
+<input
+  id="dueDate"
+  type="date"
+  formControlName="dueDate"
+  [min]="minDueDate"
+/>
+
+      </div>
+    </div>
+
+    <div class="actions">
+      <button type="submit" [disabled]="saving">
+        {{ saving ? 'Saving...' : 'Save Task' }}
+      </button>
+
+      <button
+        type="button"
+        class="secondary"
+        (click)="formVisible = false"
+        [disabled]="saving"
       >
-        <option value="createdAt">Created date</option>
-        <option value="dueDate">Due date</option>
-        <option value="priority">Priority</option>
-      </select>
-  
-      <select
-        aria-label="Sort direction"
-        [value]="sortDir"
-        (change)="changeDirection($any($event.target).value)"
+        Cancel
+      </button>
+    </div>
+  </form>
+
+  <div class="filters">
+    <input
+      type="search"
+      placeholder="Search task title..."
+      aria-label="Search tasks"
+      [formControl]="searchControl"
+    />
+
+    <select aria-label="Filter by status" [formControl]="statusFilter">
+      <option value="">All statuses</option>
+      <option *ngFor="let item of statuses" [value]="item.value">
+        {{ item.label }}
+      </option>
+    </select>
+
+    <select aria-label="Filter by priority" [formControl]="priorityFilter">
+      <option value="">All priorities</option>
+      <option *ngFor="let item of priorities" [value]="item.value">
+        {{ item.label }}
+      </option>
+    </select>
+
+    <select
+      aria-label="Sort tasks"
+      [value]="sortBy"
+      (change)="changeSort($any($event.target).value)"
+    >
+      <option value="createdAt">Created date</option>
+      <option value="dueDate">Due date</option>
+      <option value="priority">Priority</option>
+    </select>
+
+    <select
+      aria-label="Sort direction"
+      [value]="sortDir"
+      (change)="changeDirection($any($event.target).value)"
+    >
+      <option value="desc">Descending</option>
+      <option value="asc">Ascending</option>
+    </select>
+  </div>
+
+  <p *ngIf="loading">Loading tasks...</p>
+
+  <p *ngIf="!loading && tasks.length === 0">
+    No tasks found for the selected filters.
+  </p>
+
+  <div class="table-wrapper" *ngIf="!loading && tasks.length > 0">
+    <table>
+      <thead>
+        <tr>
+          <th>Title</th>
+          <th>Status</th>
+          <th>Priority</th>
+          <th>Assignee</th>
+          <th>Due Date</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+
+      <tbody>
+        <tr *ngFor="let task of tasks">
+          <td>{{ task.title }}</td>
+
+          
+<td>
+  <select
+    [attr.aria-label]="'Change status for ' + task.title"
+    [ngModel]="task.status"
+    [ngModelOptions]="{ standalone: true }"
+    (ngModelChange)="changeStatusValue(task, $event)"
+  >
+    <option *ngFor="let item of statuses" [ngValue]="item.value">
+      {{ item.label }}
+    </option>
+  </select>
+</td>
+
+
+          <td>
+            {{ getPriorityLabel(task.priority) }}
+          </td>
+
+          <td>{{ task.assignedTo || '—' }}</td>
+
+          <td>
+            {{ task.dueDate ? (task.dueDate | date:'mediumDate') : '—' }}
+          </td>
+
+          <td class="actions">
+            <button
+              type="button"
+              class="secondary"
+              (click)="openEditForm(task)"
+            >
+              Edit
+            </button>
+
+            <button
+              type="button"
+              class="danger"
+              (click)="deleteTask(task)"
+            >
+              Delete
+            </button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="pagination" *ngIf="totalCount > 0">
+    <span>
+      Total: {{ totalCount }} | Page {{ page }} of {{ totalPages }}
+    </span>
+
+    <div class="actions">
+      <button
+        type="button"
+        class="secondary"
+        [disabled]="page <= 1 || loading"
+        (click)="changePage(page - 1)"
       >
-        <option value="desc">Descending</option>
-        <option value="asc">Ascending</option>
-      </select>
+        Previous
+      </button>
+
+      <button
+        type="button"
+        class="secondary"
+        [disabled]="page >= totalPages || loading"
+        (click)="changePage(page + 1)"
+      >
+        Next
+      </button>
     </div>
-  
-    <p *ngIf="loading">Loading tasks...</p>
-  
-    <p *ngIf="!loading && tasks.length === 0">
-      No tasks found for the selected filters.
-    </p>
-  
-    <div class="table-wrapper" *ngIf="!loading && tasks.length > 0">
-      <table>
-        <thead>
-          <tr>
-            <th>Title</th>
-            <th>Status</th>
-            <th>Priority</th>
-            <th>Assignee</th>
-            <th>Due Date</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr *ngFor="let task of tasks">
-            <td>{{ task.title }}</td>
-  
-            <td>
-              <select
-                aria-label="Change task status"
-                [value]="task.status"
-                (change)="changeStatus(task, $event)"
-              >
-                <option *ngFor="let item of statuses" [value]="item.value">
-                  {{ item.label }}
-                </option>
-              </select>
-            </td>
-  
-            <td>
-              {{ priorities[task.priority].label }}
-            </td>
-  
-            <td>{{ task.assignedTo || '—' }}</td>
-  
-            <td>{{ task.dueDate ? (task.dueDate | date:'mediumDate') : '—' }}</td>
-  
-            <td class="actions">
-              <button type="button" class="secondary" (click)="openEditForm(task)">
-                Edit
-              </button>
-              <button type="button" class="danger" (click)="deleteTask(task)">
-                Delete
-              </button>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-  
-    <div class="pagination" *ngIf="totalCount > 0">
-      <span>
-        Total: {{ totalCount }} | Page {{ page }} of {{ totalPages }}
-      </span>
-      <div class="actions">
-        <button
-          type="button"
-          class="secondary"
-          [disabled]="page <= 1 || loading"
-          (click)="changePage(page - 1)"
-        >
-          Previous
-        </button>
-        <button
-          type="button"
-          class="secondary"
-          [disabled]="page >= totalPages || loading"
-          (click)="changePage(page + 1)"
-        >
-          Next
-        </button>
-      </div>
-    </div>
-  </section>
+  </div>
+</section>
